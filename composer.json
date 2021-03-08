@@ -3,11 +3,13 @@
     "description": "hyperf 腾讯会议",
     "autoload": {
         "psr-4": {
-            "Common\\": "Common",
-            "Meeting\\": "Meeting"
+            "Hyperf\\Tencent\\Common\\": "src/Common",
+            "Hyperf\\Tencent\\Meeting\\": "src/Meeting",
+            "Hyperf\\Foo\\": "src/"
         }
     },
     "require": {
+        "php": ">=7.2",
         "hyperf/guzzle": "^2.1"
     },
     "authors": [
@@ -15,5 +17,10 @@
             "name": "王诒正",
             "email": "18435134258@163.com"
         }
-    ]
+    ],
+    "extra": {
+        "hyperf": {
+            "config": "Hyperf\\Foo\\ConfigProvider"
+        }
+    }
 }

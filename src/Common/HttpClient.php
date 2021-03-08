@@ -1,5 +1,5 @@
 <?php
-namespace Common;
+namespace Hyperf\Tencent\Common;
 
 use Hyperf\Guzzle\ClientFactory;
 use Hyperf\Utils\ApplicationContext;
