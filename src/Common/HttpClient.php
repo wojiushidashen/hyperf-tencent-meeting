@@ -15,8 +15,9 @@ class HttpClient
     }
 
     // 发送http请求
-    public function send($method, $url, array $data = [], array $header = [])
+    public function send($host, $method, $uri, array $data = [], array $header = [])
     {
+        $url = $host . $uri;
         $options = [];
         if (! empty($header)) {
             $options['headers'] = $header;

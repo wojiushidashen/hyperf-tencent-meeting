@@ -27,35 +27,46 @@ class Meeting
     }
 
     // 分发接口请求
-    public function send($method, $url, array $params = [], array $header = [])
+    public function send($host, $method, $uri, array $params = [], array $header = [])
     {
-        $header = array_merge($header, $this->getHeader($method, $params));
-
-        return $this->client->send($method, $url, $params, $header);
+        $header = array_merge($header, $this->getHeader($method, $uri, $params));
+        return $this->client->send($host, $method, $uri, $params, $header);
     }
 
     // 公共设置参数
-    protected function getHeader($method, array $params = [])
+    protected function getHeader($method, $uri, array $params = [])
     {
         $time = time();
         $nonce = rand(100000, 999999);
-        $signature = $this->sign($method, $time, $nonce, json_encode($params));
+        $signature = $this->sign($method, $time, $nonce, json_encode($params), $uri);
 
         return [
-            "X-TC-Key:{$this->secretId}", // 接口权限获取
-            "X-TC-Timestamp:{$time}",
-            "X-TC-Nonce:{$nonce}",
-            "AppId:{$this->appId}", // 接口权限获取
-            "X-TC-Signature:{$signature}",
-            "content-type:application/json"
+            'X-TC-Key' => $this->secretId,
+            'X-TC-Timestamp' => $time,
+            'X-TC-Nonce' => $nonce,
+            'AppId' => $this->appId,
+            'X-TC-Signature' => $signature,
+            'content-type' => 'application/json',
         ];
     }
 
     // 获取签名
     protected function sign($method, $time = '', $nonce = '', $params = null, $uri = '/v1/meetings')
     {
-        $headerString = "X-TC-Key={$this->secretId}&X-TC-Nonce={$nonce}&X-TC-Timestamp={$time}";
+        $sortHeaderParams = [
+            'X-TC-Key' => $this->secretId,
+            'X-TC-Timestamp' => $time,
+            'X-TC-Nonce' => $nonce,
+        ];
+        Ksort($sortHeaderParams);
+        $headerString = '';
+        foreach ($sortHeaderParams as $k => $v) {
+            $headerString .= $k . '=' . $v . '&';
+        }
+        $headerString = substr($headerString, 0, strlen($headerString) - 1);
+
         $httpString = "{$method}\n{$headerString}\n{$uri}\n{$params}";
+
         return base64_encode(hash_hmac("sha256", $httpString, $this->secretKey));
     }
 }
