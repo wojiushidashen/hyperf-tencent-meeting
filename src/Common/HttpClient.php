@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Hyperf\Tencent\Common;
 
 use Hyperf\Guzzle\ClientFactory;

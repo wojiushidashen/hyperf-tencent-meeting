@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Hyperf\Tencent\Meeting;
 
 use Hyperf\Contract\ConfigInterface;
@@ -9,8 +12,13 @@ use Hyperf\Utils\ApplicationContext;
 class Meeting
 {
     private $appId = '';
+
+    private $sdkId = '';
+
     private $secretId = '';
+
     private $secretKey = '';
+
     private $config;
 
     /* @var HttpClient $client */
@@ -20,7 +28,8 @@ class Meeting
     {
         $container = ApplicationContext::getContainer();
         $this->config = $container->get(ConfigInterface::class);
-        $this->appId = $this->config->get('tencent_meeting.appId');
+        $this->sdkId = $this->config->get('tencent_meeting.appId');
+        $this->appId = $this->config->get('tencent_meeting.sdkId');
         $this->secretId = $this->config->get('tencent_meeting.secretId');
         $this->secretKey = $this->config->get('tencent_meeting.secretKey');
         $this->client = ApplicationContext::getContainer()->get(HttpClient::class);
@@ -45,6 +54,7 @@ class Meeting
             'X-TC-Timestamp' => $time,
             'X-TC-Nonce' => $nonce,
             'AppId' => $this->appId,
+            'SdkId' => $this->sdkId,
             'X-TC-Signature' => $signature,
             'content-type' => 'application/json',
         ];
@@ -58,7 +68,7 @@ class Meeting
             'X-TC-Timestamp' => $time,
             'X-TC-Nonce' => $nonce,
         ];
-        Ksort($sortHeaderParams);
+        ksort($sortHeaderParams);
         $headerString = '';
         foreach ($sortHeaderParams as $k => $v) {
             $headerString .= $k . '=' . $v . '&';
@@ -67,6 +77,6 @@ class Meeting
 
         $httpString = "{$method}\n{$headerString}\n{$uri}\n{$params}";
 
-        return base64_encode(hash_hmac("sha256", $httpString, $this->secretKey));
+        return base64_encode(hash_hmac('sha256', $httpString, $this->secretKey));
     }
 }
