@@ -43,8 +43,9 @@ class Meeting
     }
 
     // 获取签名
-    protected function sign($method, $timestamp = '', $nonce = '', $params = null, $uri = '/v1/meetings')
+    protected function sign($method, $timestamp = '', $nonce = '', $params = [], $uri = '/v1/meetings')
     {
+        $body = '';
         if (in_array($method, ['GET', 'DELETE'])) {
             $path = '';
             foreach ($params as $k => $v) {
@@ -54,9 +55,11 @@ class Meeting
                 $path = substr($path, 0, strlen($path) - 1);
                 $uri .= '?' . $path;
             }
-            $body = '';
+
         } else {
-            $body = json_encode($params);
+            if ($params) {
+                $body = json_encode($params);
+            }
         }
         $headerString = "X-TC-Key={$this->secretId}&X-TC-Nonce={$nonce}&X-TC-Timestamp={$timestamp}";
         $strToSign = "{$method}\n{$headerString}\n{$uri}\n{$body}";
