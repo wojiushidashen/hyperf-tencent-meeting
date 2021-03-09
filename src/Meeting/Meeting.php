@@ -28,8 +28,8 @@ class Meeting
     {
         $container = ApplicationContext::getContainer();
         $this->config = $container->get(ConfigInterface::class);
-        $this->sdkId = $this->config->get('tencent_meeting.appId');
-        $this->appId = $this->config->get('tencent_meeting.sdkId');
+        $this->sdkId = $this->config->get('tencent_meeting.sdkId');
+        $this->appId = $this->config->get('tencent_meeting.appId');
         $this->secretId = $this->config->get('tencent_meeting.secretId');
         $this->secretKey = $this->config->get('tencent_meeting.secretKey');
         $this->client = ApplicationContext::getContainer()->get(HttpClient::class);
@@ -42,41 +42,44 @@ class Meeting
         return $this->client->send($host, $method, $uri, $params, $header);
     }
 
+    // 获取签名
+    protected function sign($method, $timestamp = '', $nonce = '', $params = null, $uri = '/v1/meetings')
+    {
+        if (in_array($method, ['GET', 'DELETE'])) {
+            $path = '';
+            foreach ($params as $k => $v) {
+                $path .= $k . '=' . $v . '&';
+            }
+            if (count($params) > 0) {
+                $path = substr($path, 0, strlen($path) - 1);
+                $uri .= '?' . $path;
+            }
+            $body = '';
+        } else {
+            $body = json_encode($params);
+        }
+        $headerString = "X-TC-Key={$this->secretId}&X-TC-Nonce={$nonce}&X-TC-Timestamp={$timestamp}";
+        $strToSign = "{$method}\n{$headerString}\n{$uri}\n{$body}";
+        $hash = hash_hmac('sha256', $strToSign, $this->secretKey);
+        return base64_encode($hash);
+    }
+
     // 公共设置参数
     protected function getHeader($method, $uri, array $params = [])
     {
-        $time = time();
-        $nonce = rand(100000, 999999);
-        $signature = $this->sign($method, $time, $nonce, json_encode($params), $uri);
+        $time = (string) time();
+        $nonce = (string) rand(10000, 999999);
+        $signature = $this->sign(strtoupper($method), $time, $nonce, $params, $uri);
 
         return [
             'X-TC-Key' => $this->secretId,
             'X-TC-Timestamp' => $time,
             'X-TC-Nonce' => $nonce,
+            'X-TC-Signature' => $signature,
             'AppId' => $this->appId,
             'SdkId' => $this->sdkId,
-            'X-TC-Signature' => $signature,
-            'content-type' => 'application/json',
+            'URI' => $uri,
+            'Content-Type' => 'application/json',
         ];
-    }
-
-    // 获取签名
-    protected function sign($method, $time = '', $nonce = '', $params = null, $uri = '/v1/meetings')
-    {
-        $sortHeaderParams = [
-            'X-TC-Key' => $this->secretId,
-            'X-TC-Timestamp' => $time,
-            'X-TC-Nonce' => $nonce,
-        ];
-        ksort($sortHeaderParams);
-        $headerString = '';
-        foreach ($sortHeaderParams as $k => $v) {
-            $headerString .= $k . '=' . $v . '&';
-        }
-        $headerString = substr($headerString, 0, strlen($headerString) - 1);
-
-        $httpString = "{$method}\n{$headerString}\n{$uri}\n{$params}";
-
-        return base64_encode(hash_hmac('sha256', $httpString, $this->secretKey));
     }
 }
