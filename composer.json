@@ -10,7 +10,7 @@
     },
     "require": {
         "php": ">=7.2",
-        "hyperf/guzzle": "^2.1"
+        "hyperf/guzzle": "2.2.*"
     },
     "authors": [
         {
