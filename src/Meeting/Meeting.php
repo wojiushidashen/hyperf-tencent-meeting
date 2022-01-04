@@ -71,7 +71,7 @@ class Meeting
     protected function getHeader($method, $uri, array $params = [])
     {
         $time = (string) time();
-        $nonce = (string) rand(10000, 999999);
+        $nonce = (string) rand(1, 999999999);
         $signature = $this->sign(strtoupper($method), $time, $nonce, $params, $uri);
 
         return [
